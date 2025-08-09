@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>フォト三択：ほんとかフェイクか（MVP）</title>
+    <style>
+        :root {
+            --bg: #0b0c10;
+            --panel: #111317;
+            --muted: #8a93a2;
+            --text: #e9edf3;
+            --accent: #4f9cff;
+            --accent-2: #7adbb4;
+            --danger: #ff6b6b;
+            --card: #161a21;
+            --border: #1f2430;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+            background: radial-gradient(1200px 800px at 70% -10%, #1a2230 0%, var(--bg) 40%);
+            color: var(--text);
+        }
+
+        header {
+            padding: 18px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            backdrop-filter: blur(8px);
+            background: linear-gradient(180deg, rgba(11, 12, 16, 0.85) 0%, rgba(11, 12, 16, 0.55) 100%);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            justify-content: space-between;
+        }
+
+        header .title {
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+
+        header .mini {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .container {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+        }
+
+        .row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .col {
+            flex: 1 1 260px;
+        }
+
+        .btn {
+            appearance: none;
+            border: 1px solid var(--border);
+            background: #141821;
+            color: var(--text);
+            padding: 10px 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 120ms ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(180deg, #3f87ff, #2b6de6);
+            border-color: #2b6de6;
+        }
+
+        .btn-ghost {
+            background: transparent;
+        }
+
+        .btn-danger {
+            background: linear-gradient(180deg, #ff6b6b, #ff4757);
+            border-color: #ff4757;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            background: #0f1218;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text);
+            padding: 10px 12px;
+            font-size: 14px;
+        }
+
+        textarea {
+            min-height: 110px;
+            resize: vertical;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 13px;
+            margin: 6px 6px 0 0;
+            cursor: pointer;
+        }
+
+        .chip.sel {
+            outline: 2px solid var(--accent);
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 12px;
+        }
+
+        @media (min-width: 760px) {
+            .cards {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .card h4 {
+            margin: 0;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+            color: var(--muted);
+        }
+
+        .card p {
+            margin: 0;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+
+        .card.correct {
+            border-color: var(--accent-2);
+            box-shadow: 0 0 0 2px rgba(122, 219, 180, 0.25) inset;
+        }
+
+        .list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .list li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px dashed var(--border);
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        .hint {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .photo-preview {
+            width: 100%;
+            max-height: 340px;
+            object-fit: contain;
+            background: #0f1218;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .vote-grid {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .vote-buttons {
+            display: inline-grid;
+            grid-template-columns: repeat(3, 42px);
+            gap: 6px;
+        }
+
+        .vote-buttons button {
+            font-weight: 700;
+            border-radius: 10px;
+            padding: 8px 0;
+            border: 1px solid var(--border);
+            background: #0f1218;
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        .vote-buttons button.sel {
+            outline: 2px solid var(--accent);
+        }
+
+        .vote-buttons button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .footer {
+            margin-top: 24px;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 14px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div>
+            <div class="title">フォト三択：ほんとかフェイクか</div>
+            <div class="mini">純HTML+JS（MVP）</div>
+        </div>
+        <div class="mini">データは端末内のみ／スコア保存なし</div>
+    </header>
+
+    <div class="container">
+        <!-- SECTION: Setup -->
+        <section id="sec-setup" class="panel">
+            <h3>1) プレイヤー登録</h3>
+            <div class="hint">2〜8名まで。表示名のみ（重複不可）。</div>
+            <div id="player-list" class="row" style="margin-top:10px"></div>
+            <div style="margin-top:10px">
+                <button class="btn" id="btn-add-player">＋ プレイヤー追加</button>
+                <button class="btn btn-primary" id="btn-start" disabled>開始</button>
+            </div>
+            <div class="divider"></div>
+            <details>
+                <summary class="muted">接続設定（必要な方のみ）</summary>
+                <div style="margin-top:10px" class="row">
+                    <div class="col">
+                        <label>APIプロキシベースURL <span class="hint">例: /api または https://example.com/api</span></label>
+                        <input type="text" id="proxy-base" placeholder="/api" />
+                    </div>
+                    <div class="col">
+                        <label>モックモード</label>
+                        <button class="btn" id="btn-toggle-mock">OFF</button>
+                        <div class="hint">※モックはUI確認用。実生成はプロキシが必要です。</div>
+                    </div>
+                </div>
+            </details>
+        </section>
+
+        <!-- SECTION: Presenter pick -->
+        <section id="sec-presenter" class="panel hidden">
+            <h3>2) 出題者を選んでください</h3>
+            <div id="presenter-list" class="row" style="margin-top:6px"></div>
+            <div class="footer">
+                <button class="btn" id="btn-back-to-setup">← 戻る</button>
+            </div>
+        </section>
+
+        <!-- SECTION: Photo & Story -->
+        <section id="sec-photo" class="panel hidden">
+            <h3>3) 写真をアップし、対象と実話を入力</h3>
+            <div class="row">
+                <div class="col" style="min-width:280px">
+                    <label>写真ファイル</label>
+                    <input type="file" id="file-input" accept="image/*" />
+                    <img id="photo-preview" class="photo-preview hidden" alt="preview" />
+                    <div id="objects-wrap" class="hidden" style="margin-top:10px">
+                        <label>抽出された要素（選択してください）</label>
+                        <div id="objects-chips"></div>
+                    </div>
+                </div>
+                <div class="col">
+                    <label>実話エピソード（〜200字）</label>
+                    <textarea id="story-raw" maxlength="220" placeholder="例：大学の冬、赤いマグでインスタントをよく飲んで…"></textarea>
+                    <div style="margin-top:8px; display:flex; gap:8px; align-items:center;">
+                        <button class="btn" id="btn-normalize" disabled>整形する</button>
+                        <span id="normalize-status" class="hint"></span>
+                    </div>
+                    <div id="story-norm-wrap" class="hidden" style="margin-top:10px">
+                        <label>整形後（必要なら編集可）</label>
+                        <textarea id="story-norm"></textarea>
+                        <div class="footer">
+                            <button class="btn" id="btn-generate" disabled>フェイク2本を生成</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: Quiz -->
+        <section id="sec-quiz" class="panel hidden">
+            <h3>4) 三択クイズ</h3>
+            <div id="quiz-photo-wrap" class="hidden" style="margin-bottom:10px">
+                <img id="quiz-photo" class="photo-preview" alt="preview" />
+            </div>
+            <div class="cards" id="cards"></div>
+
+            <div class="divider"></div>
+            <h4>投票</h4>
+            <div id="vote-list" class="list"></div>
+
+            <div class="footer">
+                <button class="btn" id="btn-reveal" disabled>正解を表示</button>
+            </div>
+        </section>
+
+        <!-- SECTION: Result -->
+        <section id="sec-result" class="panel hidden">
+            <h3>5) 結果</h3>
+            <div id="result-cards" class="cards"></div>
+            <p id="result-summary" class="muted" style="margin-top:8px"></p>
+            <div class="footer">
+                <button class="btn" id="btn-next-round">次のラウンドへ</button>
+                <button class="btn btn-ghost" id="btn-reset-round">このラウンドをやり直す</button>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // ======== Minimal state & helpers ========
+        const $ = (sel) => document.querySelector(sel);
+        const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+        const state = {
+            players: [],
+            presenter: null,
+            proxyBase: '',
+            mock: false,
+            photoDataUrl: null,
+            objects: [],
+            selectedObjectId: null,
+            storyRaw: '',
+            storyNorm: '',
+            choices: [], // [{id:'A', text:'...', isTrue:boolean}]
+            answerId: null, // 'A' | 'B' | 'C'
+            votes: {}, // name -> 'A'|'B'|'C'
+        };
+
+        const saveSession = () => sessionStorage.setItem('pq_state_v1', JSON.stringify({
+            players: state.players,
+            presenter: state.presenter,
+            proxyBase: state.proxyBase,
+            mock: state.mock
+        }));
+        const loadSession = () => {
+            try {
+                const s = JSON.parse(sessionStorage.getItem('pq_state_v1') || '{}');
+                if (Array.isArray(s.players)) state.players = s.players;
+                if (s.presenter) state.presenter = s.presenter;
+                if (typeof s.proxyBase === 'string') state.proxyBase = s.proxyBase;
+                if (typeof s.mock === 'boolean') state.mock = s.mock;
+            } catch { }
+        };
+
+        const shuffle = (arr) => arr.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(v => v[1]);
+
+        function toastStatus(el, msg) { el.textContent = msg; setTimeout(() => { el.textContent = ''; }, 3000); }
+
+        // ======== API wrappers (via proxy or mock) ========
+        async function apiVision(base64) {
+            if (state.mock) {
+                await new Promise(r => setTimeout(r, 400));
+                return {
+                    objects: [
+                        { id: 'o1', label: '赤いマグカップ', color: '赤', pos: '左前', related: ['テーブル'] },
+                        { id: 'o2', label: 'サボテン', color: '緑', pos: '右奥', related: ['窓'] },
+                        { id: 'o3', label: 'レコードプレーヤー', color: '黒', pos: '中央', related: ['棚'] },
+                    ]
+                };
+            }
+            const r = await fetch((state.proxyBase || '/api') + '/vision', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image_base64: base64 })
+            });
+            if (!r.ok) throw new Error('vision api error');
+            return r.json();
+        }
+
+        async function apiNormalize(story) {
+            if (state.mock) {
+                await new Promise(r => setTimeout(r, 300));
+                return { story: story.slice(0, 160) + (story.length > 160 ? '…' : '') };
+            }
+            const r = await fetch((state.proxyBase || '/api') + '/normalize', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ story })
+            });
+            if (!r.ok) throw new Error('normalize api error');
+            return r.json();
+        }
+
+        async function apiFakes(objects, trueStory) {
+            if (state.mock) {
+                await new Promise(r => setTimeout(r, 500));
+                return {
+                    fakes: [
+                        '窓辺のサボテンは引っ越し初日に友人から。朝の光で針がきらめくのを見ると落ち着く。',
+                        '父から譲り受けたプレーヤーはゆっくり回転音がして、湿った夏の風まで思い出させる。'
+                    ]
+                };
+            }
+            const r = await fetch((state.proxyBase || '/api') + '/fakes', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ objects, true_story: trueStory })
+            });
+            if (!r.ok) throw new Error('fakes api error');
+            return r.json();
+        }
+
+        // ======== UI renderers ========
+        function renderPlayers() {
+            const wrap = $('#player-list');
+            wrap.innerHTML = '';
+            state.players.forEach((name, idx) => {
+                const row = document.createElement('div');
+                row.className = 'col panel';
+                row.style.padding = '10px';
+                row.innerHTML = `
+          <label>プレイヤー${idx + 1}</label>
+          <div class="row" style="align-items:center">
+            <input type="text" value="${name}" data-idx="${idx}" class="inp-name" placeholder="表示名"/>
+            <button class="btn btn-danger btn-del" data-idx="${idx}">削除</button>
+          </div>`;
+                wrap.appendChild(row);
+            });
+            $('#btn-start').disabled = state.players.length < 2 || new Set(state.players.filter(Boolean)).size !== state.players.filter(Boolean).length || state.players.some(n => !n.trim());
+            $$('.inp-name').forEach(inp => inp.addEventListener('input', (e) => {
+                state.players[parseInt(e.target.dataset.idx, 10)] = e.target.value;
+                saveSession();
+                renderPlayers();
+            }));
+            $$('.btn-del').forEach(btn => btn.addEventListener('click', (e) => {
+                const i = parseInt(e.target.dataset.idx, 10); state.players.splice(i, 1); saveSession(); renderPlayers();
+            }));
+            $('#proxy-base').value = state.proxyBase || '';
+            $('#btn-toggle-mock').textContent = state.mock ? 'ON' : 'OFF';
+        }
+
+        function renderPresenterPick() {
+            const wrap = $('#presenter-list');
+            wrap.innerHTML = '';
+            state.players.forEach(name => {
+                const b = document.createElement('button');
+                b.className = 'btn'; b.textContent = name;
+                b.addEventListener('click', () => { state.presenter = name; saveSession(); goto('photo'); });
+                wrap.appendChild(b);
+            });
+        }
+
+        function renderObjectsChips() {
+            const wrap = $('#objects-chips');
+            wrap.innerHTML = '';
+            state.objects.forEach((o, i) => {
+                const chip = document.createElement('span');
+                chip.className = 'chip' + (state.selectedObjectId === o.id ? ' sel' : '');
+                chip.textContent = `${o.label}` + (o.color ? ` / ${o.color}` : '');
+                chip.addEventListener('click', () => { state.selectedObjectId = o.id; renderObjectsChips(); $('#btn-normalize').disabled = !canNormalize(); });
+                wrap.appendChild(chip);
+            });
+        }
+
+        function renderCards(containerId, withReveal = false) {
+            const wrap = $(containerId); wrap.innerHTML = '';
+            state.choices.forEach((c, idx) => {
+                const card = document.createElement('div');
+                card.className = 'card' + (withReveal && c.id === state.answerId ? ' correct' : '');
+                card.innerHTML = `<h4>${c.id}</h4><p>${escapeHtml(c.text)}</p>`;
+                wrap.appendChild(card);
+            });
+        }
+
+        function renderVoteList(disabled = false) {
+            const wrap = $('#vote-list'); wrap.innerHTML = '';
+            state.players.forEach(name => {
+                const li = document.createElement('li');
+                const left = document.createElement('div'); left.textContent = name;
+                const right = document.createElement('div'); right.className = 'vote-buttons';
+                ['A', 'B', 'C'].forEach(id => {
+                    const btn = document.createElement('button'); btn.textContent = id;
+                    if (state.votes[name] === id) btn.classList.add('sel');
+                    btn.disabled = disabled;
+                    btn.addEventListener('click', () => { state.votes[name] = id; renderVoteList(disabled); updateRevealButton(); });
+                    right.appendChild(btn);
+                });
+                li.appendChild(left); li.appendChild(right); wrap.appendChild(li);
+            });
+        }
+
+        function updateRevealButton() {
+            const voted = Object.keys(state.votes).length;
+            $('#btn-reveal').disabled = voted === 0;
+        }
+
+        // ======== Navigation ========
+        function goto(sec) {
+            $('#sec-setup').classList.add('hidden');
+            $('#sec-presenter').classList.add('hidden');
+            $('#sec-photo').classList.add('hidden');
+            $('#sec-quiz').classList.add('hidden');
+            $('#sec-result').classList.add('hidden');
+            switch (sec) {
+                case 'setup': $('#sec-setup').classList.remove('hidden'); break;
+                case 'presenter': renderPresenterPick(); $('#sec-presenter').classList.remove('hidden'); break;
+                case 'photo': $('#sec-photo').classList.remove('hidden'); break;
+                case 'quiz': $('#sec-quiz').classList.remove('hidden'); break;
+                case 'result': $('#sec-result').classList.remove('hidden'); break;
+            }
+        }
+
+        // ======== Feature flow ========
+        function canNormalize() {
+            return !!state.photoDataUrl && state.objects.length > 0 && !!state.selectedObjectId && ($('#story-raw').value || '').trim().length > 0;
+        }
+
+        async function handleFileChange(file) {
+            if (!file) return;
+            const dataUrl = await fileToDataURL(file);
+            state.photoDataUrl = dataUrl;
+            $('#photo-preview').src = dataUrl; $('#photo-preview').classList.remove('hidden');
+            // call vision
+            try {
+                $('#objects-wrap').classList.add('hidden');
+                const { objects } = await apiVision(dataUrl);
+                state.objects = (objects || []).map((o, i) => ({ id: o.id || `o${i + 1}`, label: o.label || '要素', color: o.color || '', pos: o.pos || '', related: o.related || [] }));
+                state.selectedObjectId = null;
+                renderObjectsChips();
+                $('#objects-wrap').classList.remove('hidden');
+                $('#btn-normalize').disabled = !canNormalize();
+            } catch (e) {
+                alert('画像解析に失敗しました。再度お試しください。');
+                console.error(e);
+            }
+        }
+
+        async function handleNormalize() {
+            const raw = ($('#story-raw').value || '').trim();
+            if (!raw) return;
+            $('#btn-normalize').disabled = true; $('#normalize-status').textContent = '整形中…';
+            try {
+                const { story } = await apiNormalize(raw);
+                state.storyNorm = story || raw;
+                $('#story-norm').value = state.storyNorm;
+                $('#story-norm-wrap').classList.remove('hidden');
+                $('#btn-generate').disabled = false;
+                toastStatus($('#normalize-status'), '整形完了');
+            } catch (e) {
+                $('#story-norm-wrap').classList.add('hidden');
+                alert('整形に失敗しました。');
+            } finally {
+                $('#btn-normalize').disabled = !canNormalize();
+            }
+        }
+
+        async function handleGenerate() {
+            state.storyNorm = ($('#story-norm').value || '').trim();
+            if (!state.storyNorm) return;
+            $('#btn-generate').disabled = true;
+            try {
+                const { fakes } = await apiFakes(state.objects, state.storyNorm);
+                const trueChoice = { id: 'A', text: state.storyNorm, isTrue: true };
+                const other = [{ id: 'B', text: fakes?.[0] || 'フェイク1', isTrue: false }, { id: 'C', text: fakes?.[1] || 'フェイク2', isTrue: false }];
+                const mixed = shuffle([trueChoice, ...other]).map((c, i) => ({ ...c, id: ['A', 'B', 'C'][i] }));
+                state.choices = mixed;
+                state.answerId = mixed.find(c => c.isTrue).id;
+                // move to quiz
+                $('#quiz-photo').src = state.photoDataUrl; $('#quiz-photo-wrap').classList.remove('hidden');
+                renderCards('#cards', false);
+                state.votes = {};
+                renderVoteList(false);
+                updateRevealButton();
+                goto('quiz');
+            } catch (e) {
+                alert('フェイク生成に失敗しました。');
+                console.error(e);
+                $('#btn-generate').disabled = false;
+            }
+        }
+
+        function reveal() {
+            renderCards('#cards', true);
+            const correctNames = state.players.filter(n => state.votes[n] === state.answerId);
+            const summary = `${correctNames.length} / ${state.players.length}人 正解：` + (correctNames.join(', ') || '—');
+            // clone cards to result
+            $('#result-cards').innerHTML = $('#cards').innerHTML;
+            $('#result-summary').textContent = summary;
+            renderVoteList(true);
+            goto('result');
+        }
+
+        function resetRound(keepPhoto = false) {
+            state.photoDataUrl = keepPhoto ? state.photoDataUrl : null;
+            state.objects = []; state.selectedObjectId = null; state.storyRaw = ''; state.storyNorm = '';
+            state.choices = []; state.answerId = null; state.votes = {};
+            // reset UI inputs
+            $('#file-input').value = '';
+            $('#photo-preview').classList.add('hidden');
+            $('#objects-wrap').classList.add('hidden');
+            $('#story-raw').value = '';
+            $('#story-norm-wrap').classList.add('hidden');
+            $('#btn-generate').disabled = true;
+            $('#btn-normalize').disabled = true;
+        }
+
+        // ======== Utils ========
+        function fileToDataURL(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject; reader.readAsDataURL(file);
+            });
+        }
+        function escapeHtml(s) {
+            return (s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', '\'': '&#39;' }[c]));
+        }
+
+        // ======== Init & events ========
+        function init() {
+            loadSession();
+            renderPlayers();
+            goto('setup');
+
+            $('#btn-add-player').addEventListener('click', () => {
+                if (state.players.length >= 8) return alert('プレイヤーは最大8名までです。');
+                state.players.push(''); saveSession(); renderPlayers();
+            });
+            $('#btn-start').addEventListener('click', () => goto('presenter'));
+            $('#btn-back-to-setup').addEventListener('click', () => goto('setup'));
+            $('#proxy-base').addEventListener('input', (e) => { state.proxyBase = e.target.value.trim(); saveSession(); });
+            $('#btn-toggle-mock').addEventListener('click', () => { state.mock = !state.mock; saveSession(); renderPlayers(); });
+
+            // File & story
+            $('#file-input').addEventListener('change', (e) => handleFileChange(e.target.files?.[0]));
+            $('#story-raw').addEventListener('input', () => { $('#btn-normalize').disabled = !canNormalize(); });
+            $('#btn-normalize').addEventListener('click', handleNormalize);
+            $('#btn-generate').addEventListener('click', handleGenerate);
+
+            // Quiz
+            $('#btn-reveal').addEventListener('click', reveal);
+            $('#btn-next-round').addEventListener('click', () => { resetRound(); goto('presenter'); });
+            $('#btn-reset-round').addEventListener('click', () => { resetRound(); goto('photo'); });
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+
+</html>
