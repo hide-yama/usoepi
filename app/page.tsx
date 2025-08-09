@@ -18,6 +18,7 @@ export default function Page() {
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
   const [objects, setObjects] = useState<DetectedObject[]>([]);
   const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [storyRaw, setStoryRaw] = useState('');
   const [storyNorm, setStoryNorm] = useState('');
   const [choices, setChoices] = useState<Choice[]>([]);
@@ -102,19 +103,19 @@ export default function Page() {
     return r.json();
   }
 
-  async function apiFakes(objects: DetectedObject[], trueStory: string) {
+  async function apiFakes(objects: DetectedObject[], trueStory: string, selectedObjectId: string | null) {
     if (mock) {
       await new Promise((r) => setTimeout(r, 500));
       return {
         fakes: [
-          '窓辺のサボテンは引っ越し初日に友人から。朝の光で針がきらめくのを見ると落ち着く。',
-          '父から譲り受けたプレーヤーはゆっくり回転音がして、湿った夏の風まで思い出させる。',
+          'サボテンを引っ越し祝いに友人から貰ったことがある。',
+          'こないだ実家に帰った時に父のレコードプレイヤーを壊したけど、父にはまだ言ってない。',
         ],
       };
     }
     const r = await fetch(`${proxyBase || '/api'}/fakes`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ objects, true_story: trueStory }),
+      body: JSON.stringify({ objects, true_story: trueStory, selected_object_id: selectedObjectId }),
     });
     if (!r.ok) throw new Error('fakes api error');
     return r.json();
@@ -123,16 +124,36 @@ export default function Page() {
   // handlers
   async function handleFileChange(file: File | undefined | null) {
     if (!file) return;
+    
+    // ファイルサイズチェック（5MB制限）
+    if (file.size > 5 * 1024 * 1024) {
+      alert('画像サイズは5MB以下にしてください。');
+      return;
+    }
+    
+    console.log('Processing image:', file.name, 'Size:', Math.round(file.size / 1024), 'KB');
     const dataUrl = await fileToDataURL(file);
     setPhotoDataUrl(dataUrl);
+    setIsAnalyzing(true);
+    
     try {
+      console.log('Calling Vision API...');
       const { objects } = await apiVision(dataUrl);
-      const parsed: DetectedObject[] = (objects || []).map((o: any, i: number) => ({ id: o.id || `o${i+1}`, label: o.label || '要素', color: o.color || '', pos: o.pos || '', related: o.related || [] }));
+      console.log('Vision API response:', objects);
+      const parsed: DetectedObject[] = (objects || []).map((o: any, i: number) => ({ 
+        id: o.id || `o${i+1}`, 
+        label: o.label || '要素', 
+        color: o.color || '', 
+        pos: o.pos || '', 
+        related: o.related || [] 
+      }));
       setObjects(parsed);
       setSelectedObjectId(null);
     } catch (e) {
       alert('画像解析に失敗しました。再度お試しください。');
-      console.error(e);
+      console.error('Vision API error:', e);
+    } finally {
+      setIsAnalyzing(false);
     }
   }
 
@@ -151,7 +172,7 @@ export default function Page() {
     const norm = (storyNorm || '').trim();
     if (!norm) return;
     try {
-      const { fakes } = await apiFakes(objects, norm);
+      const { fakes } = await apiFakes(objects, norm, selectedObjectId);
       const trueChoice: Choice = { id: 'A', text: norm, isTrue: true };
       const others: Choice[] = [
         { id: 'B', text: fakes?.[0] || 'フェイク1', isTrue: false },
@@ -183,17 +204,31 @@ export default function Page() {
     setVotes({});
   }
 
-  const correctNames = useMemo(() => players.filter((n) => votes[n] === answerId), [players, votes, answerId]);
+  const correctNames = useMemo(() => players.filter((n) => n !== presenter && votes[n] === answerId), [players, presenter, votes, answerId]);
+  const votingPlayers = useMemo(() => players.filter(n => n !== presenter), [players, presenter]);
+  const incorrectNames = useMemo(() => votingPlayers.filter(n => !correctNames.includes(n)), [votingPlayers, correctNames]);
+
+  // ローディングスピナーコンポーネント
+  function LoadingOverlay() {
+    return (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div className="bg-[var(--panel)] rounded-2xl p-8 border border-[var(--border)] flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
+          <p className="text-lg font-medium">画像を解析中...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
+      {isAnalyzing && <LoadingOverlay />}
       <header className="sticky top-0 z-10 backdrop-blur bg-[rgba(11,12,16,0.55)] border-b border-[var(--border)]">
-        <div className="max-w-[980px] mx-auto p-4 flex items-center justify-between">
-          <div>
-            <div className="font-bold tracking-wide">フォト三択：ほんとかフェイクか</div>
-            <div className="text-xs text-[var(--muted)]">Next.js + API（MVP）</div>
+        <div className="max-w-[980px] mx-auto p-4">
+          <div className="text-center">
+            <div className="font-bold text-2xl tracking-wide mb-1">USOEPI</div>
+            <div className="text-sm text-[var(--muted)]">ウソエピ</div>
           </div>
-          <div className="text-xs text-[var(--muted)]">データは端末内のみ／スコア保存なし</div>
         </div>
       </header>
 
@@ -229,21 +264,6 @@ export default function Page() {
             }}><UserPlus className="w-4 h-4 mr-1"/>プレイヤー追加</button>
             <button className="btn btn-primary" disabled={!canStart} onClick={()=>setStage('presenter')}>開始</button>
           </div>
-          <div className="border-t border-[var(--border)] my-3"/>
-          <details>
-            <summary className="text-[var(--muted)] text-sm cursor-pointer">接続設定（必要な方のみ）</summary>
-            <div className="mt-3 grid md:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs text-[var(--muted)] mb-1">APIプロキシベースURL <span className="text-[10px]">例: /api または https://example.com/api</span></label>
-                <input className="w-full rounded-xl border bg-[#0f1218] border-[var(--border)] px-3 py-2 text-sm" value={proxyBase} onChange={(e)=>setProxyBase(e.target.value.trim())} placeholder="/api"/>
-              </div>
-              <div>
-                <label className="block text-xs text-[var(--muted)] mb-1">モックモード</label>
-                <button className="btn" onClick={()=>setMock(v=>!v)}>{mock ? 'ON' : 'OFF'}</button>
-                <div className="text-[10px] text-[var(--muted)]">※モックはUI確認用。実生成はプロキシが必要です。</div>
-              </div>
-            </div>
-          </details>
         </section>
 
         {/* Presenter */}
@@ -271,20 +291,27 @@ export default function Page() {
               )}
               {objects.length > 0 && (
                 <div className="mt-3">
-                  <label className="block text-xs text-[var(--muted)] mb-1">抽出された要素（選択してください）</label>
+                  <label className="block text-xs text-[var(--muted)] mb-1">検出された要素（選択してください）</label>
                   <div>
                     {objects.map((o)=> (
                       <span key={o.id} className={`chip ${selectedObjectId===o.id ? 'sel':''}`} onClick={()=>setSelectedObjectId(o.id)}>
-                        {o.label}{o.color ? ` / ${o.color}`:''}
+                        {o.label}
                       </span>
                     ))}
                   </div>
+                  <p className="text-xs text-[var(--muted)] mt-1">※ 選択した要素で実話を作成、残りの要素でフェイクを生成します</p>
                 </div>
               )}
             </div>
             <div>
-              <label className="block text-xs text-[var(--muted)] mb-1">実話エピソード（〜200字）</label>
-              <textarea value={storyRaw} onChange={(e)=>setStoryRaw(e.target.value)} maxLength={220} placeholder="例：大学の冬、赤いマグでインスタントをよく飲んで…" className="w-full rounded-xl border bg-[#0f1218] border-[var(--border)] p-2 text-sm min-h-[110px]"/>
+              <label className="block text-xs text-[var(--muted)] mb-1">実話エピソード（簡潔に）</label>
+              <textarea 
+                value={storyRaw} 
+                onChange={(e)=>setStoryRaw(e.target.value)} 
+                maxLength={100} 
+                placeholder={isAnalyzing ? "画像を解析中...しばらくお待ちください" : "例：大学時代に毎日使っていた赤いマグカップ"} 
+                disabled={isAnalyzing || objects.length === 0}
+                className="w-full rounded-xl border bg-[#0f1218] border-[var(--border)] p-2 text-sm min-h-[80px] disabled:opacity-50 disabled:cursor-not-allowed"/>
               <div className="mt-2 flex items-center gap-2">
                 <button className="btn" disabled={!canNormalize} onClick={handleNormalize}><Wand2 className="w-4 h-4 mr-1"/>整形する</button>
               </div>
@@ -321,7 +348,7 @@ export default function Page() {
           <div className="border-t border-[var(--border)] my-3"/>
           <h4 className="text-sm text-[var(--muted)]">投票</h4>
           <ul className="list-none p-0 m-0">
-            {players.map((name)=> (
+            {players.filter(name => name !== presenter).map((name)=> (
               <li key={name} className="flex items-center justify-between gap-2 py-2 border-b border-dashed border-[var(--border)]">
                 <div>{name}</div>
                 <div className="inline-grid grid-cols-3 gap-1 vote-buttons">
@@ -341,6 +368,49 @@ export default function Page() {
         {/* Result */}
         <section className={`panel ${stage==='result' ? '' : 'hidden'}`}>
           <h3 className="text-lg font-semibold mb-3">5) 結果</h3>
+          
+          {/* 結果サマリー */}
+          <div className="mb-6 p-4 bg-[var(--card)] rounded-xl border border-[var(--border)]">
+            <div className="text-center mb-4">
+              <h4 className="text-xl font-bold mb-2">結果発表</h4>
+              <p className="text-lg">{correctNames.length} / {votingPlayers.length}人が正解！</p>
+            </div>
+            
+            {correctNames.length > 0 && (
+              <div className="mb-3">
+                <h5 className="text-lg font-semibold text-[var(--accent-2)] mb-2">✅ 正解</h5>
+                <div className="space-y-2">
+                  {correctNames.map(name => (
+                    <div key={name} className="bg-[var(--accent-2)]/20 border border-[var(--accent-2)]/30 rounded-xl p-3">
+                      <div className="text-[var(--accent-2)] font-bold text-lg">{name}さんすごい！おめでとう！！🎉</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {correctNames.length === 0 && (
+              <div className="mb-3">
+                <div className="bg-[var(--accent)]/20 border border-[var(--accent)]/30 rounded-xl p-4 text-center">
+                  <div className="text-[var(--accent)] font-bold text-lg">{presenter}さんさすがです。名演技！🎭✨</div>
+                </div>
+              </div>
+            )}
+            
+            {incorrectNames.length > 0 && correctNames.length > 0 && (
+              <div>
+                <h5 className="text-lg font-semibold text-[var(--muted)] mb-2">❌ 不正解</h5>
+                <div className="space-y-2">
+                  {incorrectNames.map(name => (
+                    <div key={name} className="bg-[var(--muted)]/10 border border-[var(--muted)]/20 rounded-xl p-3">
+                      <div className="text-[var(--muted)] font-medium">{name}さん今日もあなたの目はフシアナです💩</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {choices.map((c)=> (
               <div key={c.id} className={`card ${c.id===answerId ? 'border-[var(--accent-2)] ring-2 ring-[rgba(122,219,180,0.25)]':''}`}>
@@ -349,7 +419,6 @@ export default function Page() {
               </div>
             ))}
           </div>
-          <p className="text-[var(--muted)] mt-2 text-sm">{`${correctNames.length} / ${players.length}人 正解：${correctNames.join(', ') || '—'}`}</p>
           <div className="flex justify-end gap-2 mt-2">
             <button className="btn" onClick={()=>{ resetRound(); setStage('presenter'); }}><RefreshCcw className="w-4 h-4 mr-1"/>次のラウンドへ</button>
             <button className="btn" onClick={()=>{ resetRound(); setStage('photo'); }}>このラウンドをやり直す</button>
