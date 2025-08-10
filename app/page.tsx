@@ -226,7 +226,14 @@ export default function Page() {
       <header className="sticky top-0 z-10 backdrop-blur bg-[rgba(11,12,16,0.55)] border-b border-[var(--border)]">
         <div className="max-w-[980px] mx-auto p-4">
           <div className="text-center">
-            <div className="font-bold text-2xl tracking-wide mb-1">USOEPI</div>
+            <div className="font-bold text-2xl tracking-wide mb-1">
+              <span style={{ color: '#FFD700' }}>U</span>
+              <span style={{ color: '#FF4757' }}>S</span>
+              <span style={{ color: '#4169E1' }}>O</span>
+              <span style={{ color: '#32CD32' }}>E</span>
+              <span style={{ color: '#FFD700' }}>P</span>
+              <span style={{ color: '#FF4757' }}>I</span>
+            </div>
             <div className="text-sm text-[var(--muted)]">ウソエピ</div>
           </div>
         </div>
