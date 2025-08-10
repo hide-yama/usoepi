@@ -2,8 +2,8 @@ import './globals.css';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'USOEPI ウソエピ - 写真で遊ぶ実話・フェイククイズ',
-  description: '写真の要素を使った実話・フェイク混在の三択クイズゲーム。AIが写真から要素を検出し、紛らわしいフェイクを自動生成します。',
+  title: 'USOEPI ウソエピ - 巧みなウソエピソードを見抜け',
+  description: '写真にまつわる実話の中に、AIが生成した巧妙なウソエピソードが2つ混ざっています。本物のエピソードを見抜けるか挑戦しよう！',
   icons: {
     icon: [
       { url: '/favicon.ico' },
