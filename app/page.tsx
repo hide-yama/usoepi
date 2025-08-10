@@ -213,7 +213,7 @@ export default function Page() {
     return (
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
         <div className="bg-[var(--panel)] rounded-2xl p-8 border border-[var(--border)] flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
+          <div className="w-12 h-12 border-4 border-[var(--gold)] border-t-transparent rounded-full rainbow-spinner" />
           <p className="text-lg font-medium">画像を解析中...</p>
         </div>
       </div>
@@ -242,7 +242,7 @@ export default function Page() {
       <main className="max-w-[980px] mx-auto p-5 space-y-5">
         {/* Setup */}
         <section className={`panel ${stage==='setup' ? '' : 'hidden'}`}>
-          <h3 className="text-lg font-semibold mb-1">1) プレイヤー登録</h3>
+          <h3 className="text-lg font-semibold mb-1"><span style={{ color: '#FFD700' }}>1)</span> プレイヤー登録</h3>
           <p className="text-sm text-[var(--muted)]">2〜8名まで。表示名のみ（重複不可）。</p>
           <div className="flex flex-wrap gap-3 mt-2">
             {players.map((name, idx) => (
@@ -265,17 +265,17 @@ export default function Page() {
             ))}
           </div>
           <div className="mt-3 flex gap-2">
-            <button className="btn" onClick={()=>{
+            <button className="btn btn-gold" onClick={()=>{
               if (players.length >= 8) { alert('プレイヤーは最大8名までです。'); return; }
               setPlayers([...players, '']);
             }}><UserPlus className="w-4 h-4 mr-1"/>プレイヤー追加</button>
-            <button className="btn btn-primary" disabled={!canStart} onClick={()=>setStage('presenter')}>開始</button>
+            <button className="btn btn-success" disabled={!canStart} onClick={()=>setStage('presenter')}>開始</button>
           </div>
         </section>
 
         {/* Presenter */}
         <section className={`panel ${stage==='presenter' ? '' : 'hidden'}`}>
-          <h3 className="text-lg font-semibold mb-2">2) 出題者を選んでください</h3>
+          <h3 className="text-lg font-semibold mb-2"><span style={{ color: '#FF4757' }}>2)</span> 出題者を選んでください</h3>
           <div className="flex flex-wrap gap-2 mt-1">
             {players.map((name)=> (
               <button key={name} className="btn" onClick={()=>{ setPresenter(name); setStage('photo'); }}>{name}</button>
@@ -288,7 +288,7 @@ export default function Page() {
 
         {/* Photo & Story */}
         <section className={`panel ${stage==='photo' ? '' : 'hidden'}`}>
-          <h3 className="text-lg font-semibold mb-3">3) 写真をアップし、対象と実話を入力</h3>
+          <h3 className="text-lg font-semibold mb-3"><span style={{ color: '#4169E1' }}>3)</span> 写真をアップし、対象と実話を入力</h3>
           <div className="grid md:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs text-[var(--muted)] mb-1">写真ファイル</label>
@@ -337,7 +337,7 @@ export default function Page() {
 
         {/* Quiz */}
         <section className={`panel ${stage==='quiz' ? '' : 'hidden'}`}>
-          <h3 className="text-lg font-semibold mb-3">4) 三択クイズ</h3>
+          <h3 className="text-lg font-semibold mb-3"><span style={{ color: '#32CD32' }}>4)</span> 三択クイズ</h3>
           {photoDataUrl && (
             <div className="mb-3">
               <img src={photoDataUrl} alt="preview" className="photo-preview"/>
@@ -360,7 +360,7 @@ export default function Page() {
                 <div>{name}</div>
                 <div className="inline-grid grid-cols-3 gap-1 vote-buttons">
                   {(['A','B','C'] as const).map((id)=> (
-                    <button key={id} className={`rounded-lg border px-0 py-2 w-10 ${votes[name]===id ? 'sel':''}`} onClick={()=>setVotes((v)=>({ ...v, [name]: id }))}>{id}</button>
+                    <button key={id} className={`rounded-lg border px-0 py-2 w-10 transition-all ${votes[name]===id ? 'sel':''}`} onClick={()=>setVotes((v)=>({ ...v, [name]: id }))}>{id}</button>
                   ))}
                 </div>
               </li>
@@ -403,19 +403,19 @@ export default function Page() {
             
             {correctNames.length === 0 && (
               <div className="mb-3">
-                <div className="bg-[var(--accent)]/20 border border-[var(--accent)]/30 rounded-xl p-4 text-center">
-                  <div className="text-[var(--accent)] font-bold text-lg">{presenter}さんさすがです。名演技！🎭✨</div>
+                <div className="bg-[var(--gold)]/20 border border-[var(--gold)]/30 rounded-xl p-4 text-center">
+                  <div className="text-[var(--gold)] font-bold text-lg">{presenter}さんさすがです。名演技！🎭✨</div>
                 </div>
               </div>
             )}
             
             {incorrectNames.length > 0 && correctNames.length > 0 && (
               <div>
-                <h5 className="text-lg font-semibold text-[var(--muted)] mb-2">❌ 不正解</h5>
+                <h5 className="text-lg font-semibold text-[var(--red)] mb-2">❌ 不正解</h5>
                 <div className="space-y-2">
                   {incorrectNames.map(name => (
-                    <div key={name} className="bg-[var(--muted)]/10 border border-[var(--muted)]/20 rounded-xl p-3">
-                      <div className="text-[var(--muted)] font-medium">{name}さん今日もあなたの目はフシアナです💩</div>
+                    <div key={name} className="bg-[var(--red)]/10 border border-[var(--red)]/20 rounded-xl p-3">
+                      <div className="text-[var(--red)] font-medium">{name}さん今日もあなたの目はフシアナです💩</div>
                     </div>
                   ))}
                 </div>

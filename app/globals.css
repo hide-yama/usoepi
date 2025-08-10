@@ -12,6 +12,10 @@
   --danger: #ff6b6b;
   --card: #161a21;
   --border: #1f2430;
+  --gold: #FFD700;
+  --red: #FF4757;
+  --blue: #4169E1;
+  --green: #32CD32;
 }
 
 body {
@@ -54,7 +58,7 @@ body {
   background: var(--card);
   border-color: var(--border);
 }
-.chip.sel { outline: 2px solid var(--accent); }
+.chip.sel { outline: 2px solid var(--gold); box-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
 
 .photo-preview {
   @apply w-full rounded-xl border object-contain;
@@ -63,6 +67,36 @@ body {
   border-color: var(--border);
 }
 
-.vote-buttons button.sel { outline: 2px solid var(--accent); }
+.vote-buttons button.sel { 
+  outline: 2px solid transparent;
+  background: linear-gradient(45deg, var(--gold), var(--red), var(--blue), var(--green));
+  color: white;
+  font-weight: bold;
+}
+
+.btn-success {
+  background: linear-gradient(180deg, #32CD32, #228B22);
+  border-color: #228B22;
+}
+.btn-gold {
+  background: linear-gradient(180deg, #FFD700, #FFA500);
+  border-color: #FFA500;
+  color: #000;
+}
+
+/* カラフルなローディングスピナー */
+@keyframes rainbow-spin {
+  0% { border-top-color: var(--gold); }
+  25% { border-top-color: var(--red); }
+  50% { border-top-color: var(--blue); }
+  75% { border-top-color: var(--green); }
+  100% { border-top-color: var(--gold); }
+}
+.rainbow-spinner {
+  animation: rainbow-spin 1.5s linear infinite, spin 1s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 
 
