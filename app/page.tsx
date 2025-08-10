@@ -288,6 +288,11 @@ export default function Page() {
 
         {/* Photo & Story */}
         <section className={`panel ${stage==='photo' ? '' : 'hidden'}`}>
+          {/* 出題者表示 */}
+          <div className="mb-4 p-3 bg-[var(--blue)]/10 border border-[var(--blue)]/30 rounded-xl text-center">
+            <p className="text-lg font-semibold">出題者: <span style={{ color: '#4169E1' }}>{presenter}</span>さん</p>
+          </div>
+          
           <h3 className="text-lg font-semibold mb-3"><span style={{ color: '#4169E1' }}>3)</span> 写真をアップし、対象と実話を入力</h3>
           <div className="grid md:grid-cols-2 gap-3">
             <div>
@@ -332,6 +337,13 @@ export default function Page() {
                 </div>
               )}
             </div>
+          </div>
+          
+          {/* 戻るボタン */}
+          <div className="flex justify-end mt-4">
+            <button className="btn" onClick={()=>{ setPresenter(null); setStage('presenter'); }}>
+              <ArrowLeft className="w-4 h-4 mr-1"/>出題者選択に戻る
+            </button>
           </div>
         </section>
 
