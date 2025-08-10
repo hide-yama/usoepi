@@ -239,7 +239,7 @@ export default function Page() {
           <p className="text-sm text-[var(--muted)]">2〜8名まで。表示名のみ（重複不可）。</p>
           <div className="flex flex-wrap gap-3 mt-2">
             {players.map((name, idx) => (
-              <div key={idx} className="panel flex-1 min-w-[260px] p-3">
+              <div key={idx} className="panel flex-1 min-w-[300px] p-3">
                 <label className="block text-xs text-[var(--muted)] mb-1">プレイヤー{idx+1}</label>
                 <div className="flex items-center gap-2">
                   <input
