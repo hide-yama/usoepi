@@ -248,7 +248,7 @@ export default function Page() {
                 step.completed 
                   ? 'bg-[var(--green)] border-[var(--green)] text-white' 
                   : photoStep === step.key 
-                    ? 'border-[var(--blue)] text-[var(--blue)] pulse-active' 
+                    ? 'border-[var(--blue)] text-[var(--blue)]' 
                     : 'border-[var(--muted)] text-[var(--muted)]'
               }`}>
                 {step.completed ? (
@@ -371,7 +371,7 @@ export default function Page() {
     <div>
       {isAnalyzing && <LoadingOverlay />}
       {<HelpModal />}
-      {stage === 'photo' && <FloatingTip />}
+      {/* 一時的に無効化 {stage === 'photo' && <FloatingTip />} */}
       <header className="sticky top-0 z-10 backdrop-blur bg-[rgba(11,12,16,0.55)] border-b border-[var(--border)]">
         <div className="max-w-[980px] mx-auto p-4">
           <div className="flex items-center justify-between">
@@ -488,10 +488,10 @@ export default function Page() {
                   }} 
                   maxLength={100} 
                   placeholder="例：大学時代に毎日使っていた赤いマグカップ" 
-                  className="w-full rounded-xl border bg-[#0f1218] border-[var(--border)] p-2 text-sm min-h-[80px] pulse-active"/>
+                  className="w-full rounded-xl border bg-[#0f1218] border-[var(--border)] p-2 text-sm min-h-[80px]"/>
                 <div className="mt-2 flex items-center gap-2">
                   <button 
-                    className={`btn ${storyRaw.trim().length === 0 ? 'btn-disabled' : 'pulse-active'}`} 
+                    className={`btn ${storyRaw.trim().length === 0 ? 'btn-disabled' : ''}`} 
                     disabled={!canNormalize} 
                     onClick={handleNormalize}
                   >
@@ -504,7 +504,7 @@ export default function Page() {
                     <label className="block text-xs text-[var(--muted)] mb-1">整形後（必要なら編集可）</label>
                     <textarea value={storyNorm} onChange={(e)=>setStoryNorm(e.target.value)} className="w-full rounded-xl border bg-[#0f1218] border-[var(--border)] p-2 text-sm min-h-[110px]"/>
                     <div className="flex justify-end mt-2">
-                      <button className="btn btn-primary pulse-active" onClick={handleGenerate}>
+                      <button className="btn btn-primary" onClick={handleGenerate}>
                         <Shuffle className="w-4 h-4 mr-1"/>
                         フェイク2本を生成してゲーム開始 🎮
                       </button>
