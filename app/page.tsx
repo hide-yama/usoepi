@@ -130,12 +130,6 @@ export default function Page() {
   async function handleFileChange(file: File | undefined | null) {
     if (!file) return;
     
-    // ファイルサイズチェック（5MB制限）
-    if (file.size > 5 * 1024 * 1024) {
-      alert('画像サイズは5MB以下にしてください。');
-      return;
-    }
-    
     console.log('Processing image:', file.name, 'Size:', Math.round(file.size / 1024), 'KB');
     const dataUrl = await fileToDataURL(file);
     setPhotoDataUrl(dataUrl);

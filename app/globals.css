@@ -61,10 +61,14 @@ body {
 .chip.sel { outline: 2px solid var(--gold); box-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
 
 .photo-preview {
-  @apply w-full rounded-xl border object-contain;
+  @apply w-full rounded-xl border;
   max-height: 340px;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
   background: #0f1218;
   border-color: var(--border);
+  display: block;
 }
 
 .vote-buttons button.sel { 
