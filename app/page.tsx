@@ -367,8 +367,6 @@ export default function Page() {
 
         {/* Result */}
         <section className={`panel ${stage==='result' ? '' : 'hidden'}`}>
-          <h3 className="text-lg font-semibold mb-3">5) 結果</h3>
-          
           {/* 正解表示 */}
           <div className="mb-4 p-4 bg-[var(--accent-2)]/10 border border-[var(--accent-2)]/30 rounded-xl text-center">
             <p className="text-lg font-bold text-[var(--accent-2)]">
