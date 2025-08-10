@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- 背景 -->
+  <rect width="32" height="32" rx="6" fill="#0b0c10"/>
+  
+  <!-- U -->
+  <text x="2" y="20" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#FFD700">U</text>
+  
+  <!-- S -->
+  <text x="9" y="20" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#FF4757">S</text>
+  
+  <!-- O -->
+  <text x="16" y="20" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#4169E1">O</text>
+  
+  <!-- E -->
+  <text x="23" y="20" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#32CD32">E</text>
+</svg>
