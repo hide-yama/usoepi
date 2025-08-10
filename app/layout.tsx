@@ -2,8 +2,8 @@ import './globals.css';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'フォト三択：ほんとかフェイクか（MVP）',
-  description: 'ローカル端末で遊べる三択クイズ（AI生成をAPIで実行）',
+  title: 'USOEPI ウソエピ - 写真で遊ぶ実話・フェイククイズ',
+  description: '写真の要素を使った実話・フェイク混在の三択クイズゲーム。AIが写真から要素を検出し、紛らわしいフェイクを自動生成します。',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
