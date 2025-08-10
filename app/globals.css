@@ -18,16 +18,42 @@
   --green: #32CD32;
 }
 
+* {
+  box-sizing: border-box;
+}
+
 html {
-  overflow-y: auto;
+  scroll-behavior: smooth;
 }
 
 body {
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
   background: radial-gradient(1200px 800px at 70% -10%, #1a2230 0%, var(--bg) 40%);
-  overflow-y: auto;
-  height: auto;
+  color: var(--text);
   min-height: 100vh;
+}
+
+/* Tailwindの潜在的なoverflow制限を解除 */
+#__next, [data-nextjs-scroll-focus-boundary] {
+  overflow: visible !important;
+}
+
+/* スクロール確実化 */
+html, body {
+  overflow-x: hidden;
+  overflow-y: auto !important;
+  height: auto !important;
+}
+
+main {
+  overflow: visible;
+}
+
+/* テキストのはみ出し防止 */
+.panel, .card, .chip {
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .panel {
@@ -43,10 +69,14 @@ body {
 }
 
 .btn {
-  @apply inline-flex items-center justify-center rounded-xl border font-semibold px-3 py-2 transition whitespace-nowrap;
+  @apply inline-flex items-center justify-center rounded-xl border font-semibold px-3 py-2 transition;
   background: #141821;
   color: var(--text);
   border-color: var(--border);
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
 }
 .btn:hover { @apply -translate-y-px shadow-lg; }
 .btn:disabled { @apply opacity-50 cursor-not-allowed; }
@@ -90,6 +120,11 @@ body {
   display: block;
 }
 
+.vote-buttons button { 
+  background: #141821;
+  color: var(--text);
+  border-color: var(--border);
+}
 .vote-buttons button.sel { 
   outline: 2px solid transparent;
   background: linear-gradient(45deg, var(--gold), var(--red), var(--blue), var(--green));
@@ -104,7 +139,7 @@ body {
 .btn-gold {
   background: linear-gradient(180deg, #FFD700, #FFA500);
   border-color: #FFA500;
-  color: #000;
+  color: #000 !important;
 }
 
 /* カラフルなローディングスピナー */

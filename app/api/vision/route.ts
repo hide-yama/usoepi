@@ -31,6 +31,9 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     if (!body?.image_base64) throw new Error('image_base64 required');
+    
+    console.log('Vision API - Image data length:', body.image_base64.length);
+    console.log('Vision API - Image starts with:', body.image_base64.substring(0, 50));
 
     // OpenAI Vision APIを使用
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -64,9 +67,18 @@ export async function POST(req: Request) {
     });
 
     if (!openaiResponse.ok) {
-      const errorData = await openaiResponse.json();
-      console.error('OpenAI API error:', errorData);
-      throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
+      const errorText = await openaiResponse.text();
+      console.error('OpenAI API error status:', openaiResponse.status);
+      console.error('OpenAI API error response:', errorText);
+      
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        errorData = { error: { message: errorText } };
+      }
+      
+      throw new Error(`OpenAI API error (${openaiResponse.status}): ${errorData.error?.message || errorText}`);
     }
 
     const data = await openaiResponse.json();

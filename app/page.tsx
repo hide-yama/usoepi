@@ -52,6 +52,7 @@ export default function Page() {
     window.scrollTo(0, 0);
   }, [stage]);
 
+
   const canStart = useMemo(() => {
     const trimmed = players.map((p) => p.trim()).filter(Boolean);
     return (
@@ -95,7 +96,12 @@ export default function Page() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ image_base64: base64 }),
     });
-    if (!r.ok) throw new Error('vision api error');
+    if (!r.ok) {
+      const errorText = await r.text();
+      console.error('Vision API error status:', r.status);
+      console.error('Vision API error response:', errorText);
+      throw new Error(`Vision API error (${r.status}): ${errorText}`);
+    }
     return r.json();
   }
 
@@ -141,6 +147,8 @@ export default function Page() {
     
     try {
       console.log('Calling Vision API...');
+      console.log('Image data URL length:', dataUrl.length);
+      console.log('Image data preview:', dataUrl.substring(0, 100));
       const { objects } = await apiVision(dataUrl);
       console.log('Vision API response:', objects);
       const parsed: DetectedObject[] = (objects || []).map((o: any, i: number) => ({ 
@@ -401,20 +409,20 @@ export default function Page() {
         <section className={`panel ${stage==='setup' ? '' : 'hidden'}`}>
           <h3 className="text-lg font-semibold mb-1"><span style={{ color: '#FFD700' }}>1)</span> プレイヤー登録</h3>
           <p className="text-sm text-[var(--muted)]">2〜8名まで。表示名のみ（重複不可）。</p>
-          <div className="flex flex-wrap gap-3 mt-2">
+          <div className="space-y-3 mt-2">
             {players.map((name, idx) => (
-              <div key={idx} className="panel flex-1 min-w-[300px] p-3">
+              <div key={idx} className="panel p-3">
                 <label className="block text-xs text-[var(--muted)] mb-1">プレイヤー{idx+1}</label>
                 <div className="flex items-center gap-2">
                   <input
-                    className="w-full rounded-xl border bg-[#0f1218] border-[var(--border)] px-3 py-2 text-sm"
+                    className="flex-1 rounded-xl border bg-[#0f1218] border-[var(--border)] px-3 py-2 text-sm"
                     placeholder="表示名"
                     value={name}
                     onChange={(e)=>{
                       const next=[...players]; next[idx]=e.target.value; setPlayers(next);
                     }}
                   />
-                  <button className="btn btn-danger" onClick={()=>{
+                  <button className="btn btn-danger flex-shrink-0" onClick={()=>{
                     const next = players.slice(); next.splice(idx,1); setPlayers(next);
                   }}>削除</button>
                 </div>
@@ -454,7 +462,7 @@ export default function Page() {
           <ProgressIndicator />
           
           <h3 className="text-lg font-semibold mb-3"><span style={{ color: '#4169E1' }}>3)</span> 写真をアップし、対象と実話を入力</h3>
-          <div className="grid md:grid-cols-2 gap-3">
+          <div className="space-y-4">
             <div>
               <label className="block text-xs text-[var(--muted)] mb-1">写真ファイル</label>
               <input type="file" accept="image/*" onChange={(e)=>handleFileChange(e.currentTarget.files?.[0])} />
@@ -471,7 +479,7 @@ export default function Page() {
                       </span>
                     ))}
                   </div>
-                  <p className="text-xs text-[var(--muted)] mt-1">※ 選択した要素で実話を作成、残りの要素でフェイクを生成します</p>
+                  <p className="text-xs text-[var(--muted)] mt-1 break-words">※ 選択した要素で実話を作成、残りの要素でフェイクを生成します</p>
                 </div>
               )}
             </div>
@@ -504,7 +512,7 @@ export default function Page() {
                     <label className="block text-xs text-[var(--muted)] mb-1">整形後（必要なら編集可）</label>
                     <textarea value={storyNorm} onChange={(e)=>setStoryNorm(e.target.value)} className="w-full rounded-xl border bg-[#0f1218] border-[var(--border)] p-2 text-sm min-h-[110px]"/>
                     <div className="flex justify-end mt-2">
-                      <button className="btn btn-primary" onClick={handleGenerate}>
+                      <button className="btn btn-primary break-words" onClick={handleGenerate}>
                         <Shuffle className="w-4 h-4 mr-1"/>
                         フェイク2本を生成してゲーム開始 🎮
                       </button>
