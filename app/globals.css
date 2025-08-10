@@ -103,4 +103,30 @@ body {
   to { transform: rotate(360deg); }
 }
 
+/* プログレスステップのアニメーション */
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}
+.pulse-active {
+  animation: pulse 2s infinite;
+  box-shadow: 0 0 15px rgba(79, 156, 255, 0.3);
+}
+
+@keyframes check-appear {
+  0% { opacity: 0; transform: scale(0.5); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.check-animation {
+  animation: check-appear 0.5s ease-out;
+}
+
+.floating-tip {
+  animation: fadeInUp 0.3s ease-out;
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 

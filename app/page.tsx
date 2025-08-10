@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Shuffle, UserPlus, ArrowLeft, Image as ImageIcon, Eye, Wand2, RefreshCcw, CheckCircle2, HelpCircle, X } from 'lucide-react';
+import { Shuffle, UserPlus, ArrowLeft, Image as ImageIcon, Eye, Wand2, RefreshCcw, CheckCircle2, HelpCircle, X, Check, Lightbulb } from 'lucide-react';
 
 type Choice = { id: 'A' | 'B' | 'C'; text: string; isTrue: boolean };
 type DetectedObject = { id: string; label: string; color?: string; pos?: string; related?: string[] };
@@ -25,6 +25,9 @@ export default function Page() {
   const [answerId, setAnswerId] = useState<'A' | 'B' | 'C' | null>(null);
   const [votes, setVotes] = useState<Record<string, 'A' | 'B' | 'C'>>({});
   const [showHelpModal, setShowHelpModal] = useState(false);
+  
+  // 写真アップ画面のステップ管理
+  const [photoStep, setPhotoStep] = useState<'upload' | 'select' | 'write' | 'normalize' | 'generate' | 'complete'>('upload');
 
   // session restore (players/presenter/proxy/mock)
   useEffect(() => {
@@ -149,6 +152,7 @@ export default function Page() {
       }));
       setObjects(parsed);
       setSelectedObjectId(null);
+      setPhotoStep('select'); // 次のステップに進む
     } catch (e) {
       alert('画像解析に失敗しました。再度お試しください。');
       console.error('Vision API error:', e);
@@ -163,6 +167,7 @@ export default function Page() {
     try {
       const { story } = await apiNormalize(raw);
       setStoryNorm(story || raw);
+      setPhotoStep('normalize'); // 次のステップに進む
     } catch (e) {
       alert('整形に失敗しました。');
     }
@@ -182,6 +187,7 @@ export default function Page() {
       setChoices(mixed);
       setAnswerId(mixed.find((c) => c.isTrue)!.id);
       setVotes({});
+      setPhotoStep('complete'); // ステップ完了
       setStage('quiz');
       window.scrollTo(0, 0);
     } catch (e) {
@@ -204,6 +210,7 @@ export default function Page() {
     setChoices([]);
     setAnswerId(null);
     setVotes({});
+    setPhotoStep('upload');
   }
 
   const correctNames = useMemo(() => players.filter((n) => n !== presenter && votes[n] === answerId), [players, presenter, votes, answerId]);
@@ -217,6 +224,87 @@ export default function Page() {
         <div className="bg-[var(--panel)] rounded-2xl p-8 border border-[var(--border)] flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-[var(--gold)] border-t-transparent rounded-full rainbow-spinner" />
           <p className="text-lg font-medium">画像を解析中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // プログレスインジケーターコンポーネント
+  function ProgressIndicator() {
+    const steps = [
+      { key: 'upload', label: '写真選択', completed: !!photoDataUrl },
+      { key: 'select', label: '要素選択', completed: !!selectedObjectId },
+      { key: 'write', label: '実話入力', completed: storyRaw.trim().length > 0 },
+      { key: 'normalize', label: '文章確認', completed: !!storyNorm },
+      { key: 'generate', label: '完成', completed: choices.length > 0 }
+    ];
+
+    return (
+      <div className="mb-6 bg-[var(--card)] rounded-xl p-4 border border-[var(--border)]">
+        <div className="flex items-center justify-between">
+          {steps.map((step, index) => (
+            <div key={step.key} className="flex items-center">
+              <div className={`flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all ${
+                step.completed 
+                  ? 'bg-[var(--green)] border-[var(--green)] text-white' 
+                  : photoStep === step.key 
+                    ? 'border-[var(--blue)] text-[var(--blue)] pulse-active' 
+                    : 'border-[var(--muted)] text-[var(--muted)]'
+              }`}>
+                {step.completed ? (
+                  <Check className="w-4 h-4 check-animation" />
+                ) : (
+                  <span className="text-xs font-bold">{index + 1}</span>
+                )}
+              </div>
+              <span className={`ml-2 text-sm hidden sm:inline ${
+                step.completed 
+                  ? 'text-[var(--green)]' 
+                  : photoStep === step.key 
+                    ? 'text-[var(--blue)] font-bold' 
+                    : 'text-[var(--muted)]'
+              }`}>
+                {step.label}
+              </span>
+              {index < steps.length - 1 && (
+                <div className={`w-8 h-0.5 mx-2 ${
+                  step.completed ? 'bg-[var(--green)]' : 'bg-[var(--muted)]'
+                }`} />
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // フローティングヘルプチップコンポーネント
+  function FloatingTip() {
+    const getTipMessage = () => {
+      switch(photoStep) {
+        case 'upload':
+          return '写真をアップロードしてください';
+        case 'select':
+          return '写真から要素を1つ選んでください';
+        case 'write':
+          return '選んだ要素について実話を書いてください';
+        case 'normalize':
+          return '文章を確認して、必要なら編集してください';
+        case 'generate':
+          return 'フェイク2本を生成してゲームを開始しましょう';
+        default:
+          return '';
+      }
+    };
+
+    const message = getTipMessage();
+    if (!message) return null;
+
+    return (
+      <div className="fixed bottom-6 right-6 z-40 floating-tip">
+        <div className="bg-[var(--blue)] text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
+          <Lightbulb className="w-4 h-4" />
+          <span className="text-sm font-medium">{message}</span>
         </div>
       </div>
     );
@@ -283,6 +371,7 @@ export default function Page() {
     <div>
       {isAnalyzing && <LoadingOverlay />}
       {<HelpModal />}
+      {stage === 'photo' && <FloatingTip />}
       <header className="sticky top-0 z-10 backdrop-blur bg-[rgba(11,12,16,0.55)] border-b border-[var(--border)]">
         <div className="max-w-[980px] mx-auto p-4">
           <div className="flex items-center justify-between">
@@ -361,6 +450,9 @@ export default function Page() {
             <p className="text-lg font-semibold">出題者: <span style={{ color: '#4169E1' }}>{presenter}</span>さん</p>
           </div>
           
+          {/* プログレスインジケーター */}
+          <ProgressIndicator />
+          
           <h3 className="text-lg font-semibold mb-3"><span style={{ color: '#4169E1' }}>3)</span> 写真をアップし、対象と実話を入力</h3>
           <div className="grid md:grid-cols-2 gap-3">
             <div>
@@ -374,7 +466,7 @@ export default function Page() {
                   <label className="block text-xs text-[var(--muted)] mb-1">検出された要素（選択してください）</label>
                   <div>
                     {objects.map((o)=> (
-                      <span key={o.id} className={`chip ${selectedObjectId===o.id ? 'sel':''}`} onClick={()=>setSelectedObjectId(o.id)}>
+                      <span key={o.id} className={`chip ${selectedObjectId===o.id ? 'sel':''}`} onClick={()=>{setSelectedObjectId(o.id); if(o.id) setPhotoStep('write');}}>
                         {o.label}
                       </span>
                     ))}
@@ -387,20 +479,37 @@ export default function Page() {
               <label className="block text-xs text-[var(--muted)] mb-1">実話エピソード（簡潔に）</label>
               <textarea 
                 value={storyRaw} 
-                onChange={(e)=>setStoryRaw(e.target.value)} 
+                onChange={(e)=>{
+                  setStoryRaw(e.target.value);
+                  if(e.target.value.trim().length > 0 && photoStep === 'write') {
+                    // まだ入力段階のままなので、十分な文章になったらnormalizeステップに案内
+                  }
+                }} 
                 maxLength={100} 
                 placeholder={isAnalyzing ? "画像を解析中...しばらくお待ちください" : "例：大学時代に毎日使っていた赤いマグカップ"} 
                 disabled={isAnalyzing || objects.length === 0}
                 className="w-full rounded-xl border bg-[#0f1218] border-[var(--border)] p-2 text-sm min-h-[80px] disabled:opacity-50 disabled:cursor-not-allowed"/>
               <div className="mt-2 flex items-center gap-2">
-                <button className="btn" disabled={!canNormalize} onClick={handleNormalize}><Wand2 className="w-4 h-4 mr-1"/>整形する</button>
+                <button 
+                  className={`btn ${!selectedObjectId ? 'btn-disabled' : storyRaw.trim().length === 0 ? 'btn-disabled' : 'pulse-active'}`} 
+                  disabled={!canNormalize} 
+                  onClick={handleNormalize}
+                >
+                  <Wand2 className="w-4 h-4 mr-1"/>
+                  {!selectedObjectId ? 'まず要素を選択してください' : 
+                   storyRaw.trim().length === 0 ? '実話を入力してください' : 
+                   '整形する ✨'}
+                </button>
               </div>
               {storyNorm && (
                 <div className="mt-3">
                   <label className="block text-xs text-[var(--muted)] mb-1">整形後（必要なら編集可）</label>
                   <textarea value={storyNorm} onChange={(e)=>setStoryNorm(e.target.value)} className="w-full rounded-xl border bg-[#0f1218] border-[var(--border)] p-2 text-sm min-h-[110px]"/>
                   <div className="flex justify-end mt-2">
-                    <button className="btn btn-primary" onClick={handleGenerate}><Shuffle className="w-4 h-4 mr-1"/>フェイク2本を生成</button>
+                    <button className="btn btn-primary pulse-active" onClick={handleGenerate}>
+                      <Shuffle className="w-4 h-4 mr-1"/>
+                      フェイク2本を生成してゲーム開始 🎮
+                    </button>
                   </div>
                 </div>
               )}
