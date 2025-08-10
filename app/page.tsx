@@ -301,7 +301,7 @@ export default function Page() {
     if (!message) return null;
 
     return (
-      <div className="fixed bottom-6 right-6 z-40 floating-tip">
+      <div className="fixed bottom-6 right-6 z-30 floating-tip pointer-events-none">
         <div className="bg-[var(--blue)] text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
           <Lightbulb className="w-4 h-4" />
           <span className="text-sm font-medium">{message}</span>
@@ -475,45 +475,44 @@ export default function Page() {
                 </div>
               )}
             </div>
-            <div>
-              <label className="block text-xs text-[var(--muted)] mb-1">実話エピソード（簡潔に）</label>
-              <textarea 
-                value={storyRaw} 
-                onChange={(e)=>{
-                  setStoryRaw(e.target.value);
-                  if(e.target.value.trim().length > 0 && photoStep === 'write') {
-                    // まだ入力段階のままなので、十分な文章になったらnormalizeステップに案内
-                  }
-                }} 
-                maxLength={100} 
-                placeholder={isAnalyzing ? "画像を解析中...しばらくお待ちください" : "例：大学時代に毎日使っていた赤いマグカップ"} 
-                disabled={isAnalyzing || objects.length === 0}
-                className="w-full rounded-xl border bg-[#0f1218] border-[var(--border)] p-2 text-sm min-h-[80px] disabled:opacity-50 disabled:cursor-not-allowed"/>
-              <div className="mt-2 flex items-center gap-2">
-                <button 
-                  className={`btn ${!selectedObjectId ? 'btn-disabled' : storyRaw.trim().length === 0 ? 'btn-disabled' : 'pulse-active'}`} 
-                  disabled={!canNormalize} 
-                  onClick={handleNormalize}
-                >
-                  <Wand2 className="w-4 h-4 mr-1"/>
-                  {!selectedObjectId ? 'まず要素を選択してください' : 
-                   storyRaw.trim().length === 0 ? '実話を入力してください' : 
-                   '整形する ✨'}
-                </button>
-              </div>
-              {storyNorm && (
-                <div className="mt-3">
-                  <label className="block text-xs text-[var(--muted)] mb-1">整形後（必要なら編集可）</label>
-                  <textarea value={storyNorm} onChange={(e)=>setStoryNorm(e.target.value)} className="w-full rounded-xl border bg-[#0f1218] border-[var(--border)] p-2 text-sm min-h-[110px]"/>
-                  <div className="flex justify-end mt-2">
-                    <button className="btn btn-primary pulse-active" onClick={handleGenerate}>
-                      <Shuffle className="w-4 h-4 mr-1"/>
-                      フェイク2本を生成してゲーム開始 🎮
-                    </button>
-                  </div>
+            {selectedObjectId && (
+              <div>
+                <label className="block text-xs text-[var(--muted)] mb-1">実話エピソード（簡潔に）</label>
+                <textarea 
+                  value={storyRaw} 
+                  onChange={(e)=>{
+                    setStoryRaw(e.target.value);
+                    if(e.target.value.trim().length > 0 && photoStep === 'write') {
+                      // まだ入力段階のままなので、十分な文章になったらnormalizeステップに案内
+                    }
+                  }} 
+                  maxLength={100} 
+                  placeholder="例：大学時代に毎日使っていた赤いマグカップ" 
+                  className="w-full rounded-xl border bg-[#0f1218] border-[var(--border)] p-2 text-sm min-h-[80px] pulse-active"/>
+                <div className="mt-2 flex items-center gap-2">
+                  <button 
+                    className={`btn ${storyRaw.trim().length === 0 ? 'btn-disabled' : 'pulse-active'}`} 
+                    disabled={!canNormalize} 
+                    onClick={handleNormalize}
+                  >
+                    <Wand2 className="w-4 h-4 mr-1"/>
+                    {storyRaw.trim().length === 0 ? '実話を入力してください' : '整形する ✨'}
+                  </button>
                 </div>
-              )}
-            </div>
+                {storyNorm && (
+                  <div className="mt-3">
+                    <label className="block text-xs text-[var(--muted)] mb-1">整形後（必要なら編集可）</label>
+                    <textarea value={storyNorm} onChange={(e)=>setStoryNorm(e.target.value)} className="w-full rounded-xl border bg-[#0f1218] border-[var(--border)] p-2 text-sm min-h-[110px]"/>
+                    <div className="flex justify-end mt-2">
+                      <button className="btn btn-primary pulse-active" onClick={handleGenerate}>
+                        <Shuffle className="w-4 h-4 mr-1"/>
+                        フェイク2本を生成してゲーム開始 🎮
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           
           {/* 戻るボタン */}

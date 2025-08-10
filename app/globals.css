@@ -54,11 +54,23 @@ body {
 }
 
 .chip {
-  @apply inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm mt-1 mr-1 cursor-pointer;
+  @apply inline-flex items-center gap-2 rounded-full border-2 px-4 py-2 text-sm mt-2 mr-2 cursor-pointer transition-all;
   background: var(--card);
   border-color: var(--border);
+  font-weight: 500;
 }
-.chip.sel { outline: 2px solid var(--gold); box-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
+.chip:hover {
+  border-color: var(--gold);
+  transform: translateY(-1px);
+}
+.chip.sel { 
+  background: linear-gradient(135deg, var(--gold), #FFA500);
+  border-color: var(--gold);
+  color: #000;
+  font-weight: bold;
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+  transform: translateY(-2px);
+}
 
 .photo-preview {
   @apply w-full rounded-xl border;
