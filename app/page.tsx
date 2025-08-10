@@ -43,6 +43,11 @@ export default function Page() {
     );
   }, [players, presenter, proxyBase, mock]);
 
+  // 画面遷移時にスクロール位置をリセット
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [stage]);
+
   const canStart = useMemo(() => {
     const trimmed = players.map((p) => p.trim()).filter(Boolean);
     return (
@@ -183,6 +188,7 @@ export default function Page() {
       setAnswerId(mixed.find((c) => c.isTrue)!.id);
       setVotes({});
       setStage('quiz');
+      window.scrollTo(0, 0);
     } catch (e) {
       alert('フェイク生成に失敗しました。');
       console.error(e);
@@ -191,6 +197,7 @@ export default function Page() {
 
   function reveal() {
     setStage('result');
+    window.scrollTo(0, 0);
   }
 
   function resetRound(keepPhoto = false) {
@@ -269,7 +276,7 @@ export default function Page() {
               if (players.length >= 8) { alert('プレイヤーは最大8名までです。'); return; }
               setPlayers([...players, '']);
             }}><UserPlus className="w-4 h-4 mr-1"/>プレイヤー追加</button>
-            <button className="btn btn-success" disabled={!canStart} onClick={()=>setStage('presenter')}>開始</button>
+            <button className="btn btn-success" disabled={!canStart} onClick={()=>{ setStage('presenter'); window.scrollTo(0, 0); }}>開始</button>
           </div>
         </section>
 
@@ -278,11 +285,11 @@ export default function Page() {
           <h3 className="text-lg font-semibold mb-2"><span style={{ color: '#FF4757' }}>2)</span> 出題者を選んでください</h3>
           <div className="flex flex-wrap gap-2 mt-1">
             {players.map((name)=> (
-              <button key={name} className="btn" onClick={()=>{ setPresenter(name); setStage('photo'); }}>{name}</button>
+              <button key={name} className="btn" onClick={()=>{ setPresenter(name); setStage('photo'); window.scrollTo(0, 0); }}>{name}</button>
             ))}
           </div>
           <div className="flex justify-end mt-3">
-            <button className="btn" onClick={()=>setStage('setup')}><ArrowLeft className="w-4 h-4 mr-1"/>戻る</button>
+            <button className="btn" onClick={()=>{ setStage('setup'); window.scrollTo(0, 0); }}><ArrowLeft className="w-4 h-4 mr-1"/>戻る</button>
           </div>
         </section>
 
@@ -341,7 +348,7 @@ export default function Page() {
           
           {/* 戻るボタン */}
           <div className="flex justify-end mt-4">
-            <button className="btn" onClick={()=>{ setPresenter(null); setStage('presenter'); }}>
+            <button className="btn" onClick={()=>{ setPresenter(null); setStage('presenter'); window.scrollTo(0, 0); }}>
               <ArrowLeft className="w-4 h-4 mr-1"/>出題者選択に戻る
             </button>
           </div>
@@ -444,8 +451,8 @@ export default function Page() {
             ))}
           </div>
           <div className="flex justify-end gap-2 mt-2">
-            <button className="btn" onClick={()=>{ resetRound(); setStage('presenter'); }}><RefreshCcw className="w-4 h-4 mr-1"/>次のラウンドへ</button>
-            <button className="btn" onClick={()=>{ resetRound(); setStage('photo'); }}>このラウンドをやり直す</button>
+            <button className="btn" onClick={()=>{ resetRound(); setStage('presenter'); window.scrollTo(0, 0); }}><RefreshCcw className="w-4 h-4 mr-1"/>次のラウンドへ</button>
+            <button className="btn" onClick={()=>{ resetRound(); setStage('photo'); window.scrollTo(0, 0); }}>このラウンドをやり直す</button>
           </div>
         </section>
       </main>
