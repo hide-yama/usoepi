@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Shuffle, UserPlus, ArrowLeft, Image as ImageIcon, Eye, Wand2, RefreshCcw, CheckCircle2 } from 'lucide-react';
+import { Shuffle, UserPlus, ArrowLeft, Image as ImageIcon, Eye, Wand2, RefreshCcw, CheckCircle2, HelpCircle, X } from 'lucide-react';
 
 type Choice = { id: 'A' | 'B' | 'C'; text: string; isTrue: boolean };
 type DetectedObject = { id: string; label: string; color?: string; pos?: string; related?: string[] };
@@ -24,6 +24,7 @@ export default function Page() {
   const [choices, setChoices] = useState<Choice[]>([]);
   const [answerId, setAnswerId] = useState<'A' | 'B' | 'C' | null>(null);
   const [votes, setVotes] = useState<Record<string, 'A' | 'B' | 'C'>>({});
+  const [showHelpModal, setShowHelpModal] = useState(false);
 
   // session restore (players/presenter/proxy/mock)
   useEffect(() => {
@@ -221,21 +222,87 @@ export default function Page() {
     );
   }
 
+  // ヘルプモーダルコンポーネント
+  function HelpModal() {
+    if (!showHelpModal) return null;
+    
+    return (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowHelpModal(false)}>
+        <div className="bg-[var(--panel)] rounded-2xl p-6 border border-[var(--border)] max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">使い方</h2>
+            <button className="btn p-2" onClick={() => setShowHelpModal(false)}>
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          
+          <div className="space-y-4 text-sm">
+            <section>
+              <h3 className="font-bold text-[var(--gold)] mb-2">🎮 ゲームの流れ</h3>
+              <ol className="list-decimal list-inside space-y-2 text-[var(--muted)]">
+                <li>2〜8名のプレイヤーを登録</li>
+                <li>各ラウンドで出題者を1名選択</li>
+                <li>出題者は写真をアップロードし、写真内の要素を1つ選んで実話を入力</li>
+                <li>AIが選ばれなかった要素を使って、巧妙なウソエピソードを2つ生成</li>
+                <li>他のプレイヤーは3つのエピソードから本物を当てる</li>
+              </ol>
+            </section>
+            
+            <section>
+              <h3 className="font-bold text-[var(--red)] mb-2">📸 写真のコツ</h3>
+              <ul className="list-disc list-inside space-y-1 text-[var(--muted)]">
+                <li>複数の要素が含まれる写真がおすすめ</li>
+                <li>思い出深い場所や物の写真だと面白い実話が作りやすい</li>
+                <li>画像サイズの制限はありません</li>
+              </ul>
+            </section>
+            
+            <section>
+              <h3 className="font-bold text-[var(--blue)] mb-2">✍️ 実話の書き方</h3>
+              <ul className="list-disc list-inside space-y-1 text-[var(--muted)]">
+                <li>選んだ要素にまつわる個人的な思い出を書く</li>
+                <li>20〜40字程度の短い文章に整形されます</li>
+                <li>「〜だった」「〜していた」など過去形で書くと自然</li>
+              </ul>
+            </section>
+            
+            <section>
+              <h3 className="font-bold text-[var(--green)] mb-2">🏆 勝利条件</h3>
+              <ul className="list-disc list-inside space-y-1 text-[var(--muted)]">
+                <li><strong>回答者</strong>：本物のエピソードを見抜く</li>
+                <li><strong>出題者</strong>：全員を騙すことができれば名演技！</li>
+              </ul>
+            </section>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       {isAnalyzing && <LoadingOverlay />}
+      {<HelpModal />}
       <header className="sticky top-0 z-10 backdrop-blur bg-[rgba(11,12,16,0.55)] border-b border-[var(--border)]">
         <div className="max-w-[980px] mx-auto p-4">
-          <div className="text-center">
-            <div className="font-bold text-2xl tracking-wide mb-1">
-              <span style={{ color: '#FFD700' }}>U</span>
-              <span style={{ color: '#FF4757' }}>S</span>
-              <span style={{ color: '#4169E1' }}>O</span>
-              <span style={{ color: '#32CD32' }}>E</span>
-              <span style={{ color: '#FFD700' }}>P</span>
-              <span style={{ color: '#FF4757' }}>I</span>
+          <div className="flex items-center justify-between">
+            <div className="flex-1" />
+            <div className="text-center">
+              <div className="font-bold text-2xl tracking-wide mb-1">
+                <span style={{ color: '#FFD700' }}>U</span>
+                <span style={{ color: '#FF4757' }}>S</span>
+                <span style={{ color: '#4169E1' }}>O</span>
+                <span style={{ color: '#32CD32' }}>E</span>
+                <span style={{ color: '#FFD700' }}>P</span>
+                <span style={{ color: '#FF4757' }}>I</span>
+              </div>
+              <div className="text-sm text-[var(--muted)]">ウソエピ</div>
             </div>
-            <div className="text-sm text-[var(--muted)]">ウソエピ</div>
+            <div className="flex-1 flex justify-end">
+              <button className="btn p-2" onClick={() => setShowHelpModal(true)} title="使い方">
+                <HelpCircle className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </div>
       </header>
