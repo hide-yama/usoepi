@@ -369,6 +369,13 @@ export default function Page() {
         <section className={`panel ${stage==='result' ? '' : 'hidden'}`}>
           <h3 className="text-lg font-semibold mb-3">5) 結果</h3>
           
+          {/* 正解表示 */}
+          <div className="mb-4 p-4 bg-[var(--accent-2)]/10 border border-[var(--accent-2)]/30 rounded-xl text-center">
+            <p className="text-lg font-bold text-[var(--accent-2)]">
+              正解は{answerId}の「{choices.find(c => c.id === answerId)?.text}」でした
+            </p>
+          </div>
+          
           {/* 結果サマリー */}
           <div className="mb-6 p-4 bg-[var(--card)] rounded-xl border border-[var(--border)]">
             <div className="text-center mb-4">
