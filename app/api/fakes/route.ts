@@ -22,8 +22,8 @@ export async function POST(req: Request) {
       // APIキーがない場合はモック応答（選択された要素を除外）
       const availableObjects = Array.isArray(objects) ? objects.filter((o: any) => o.id !== selected_object_id) : [];
       const labels = availableObjects.map((o: any) => o?.label).filter(Boolean);
-      const alt1 = labels[0] ? `子供の頃、${labels[0]}が印象的だった` : '子供の頃の思い出があった';
-      const alt2 = labels[1] ? `学生時代、${labels[1]}をよく見ていた` : '学生時代の記憶がある';
+      const alt1 = labels[0] ? `${labels[0]}と思い出` : '思い出と記憶';
+      const alt2 = labels[1] ? `${labels[1]}と時間` : '時間と場所';
       return Response.json({ fakes: [alt1, alt2] }, { headers: cors() });
     }
 
@@ -45,7 +45,7 @@ export async function POST(req: Request) {
         messages: [
           {
             role: 'system',
-            content: `選択されなかった要素（フェイク生成用）:\n${objectsList}\n\n役割: 上記要素から1つだけを選んで、ユーザ自身の過去の体験文章形式の架空エピソードを2本（各20-40字程度）作成。\n\n条件:\n- 1本につき1つの要素のみ使用\n- ユーザ自身の体験として語る（「私が〜」「私の〜」「〜していた」）\n- 過去の体験文章形式（「〜だった」「〜していた」「〜したことがある」）\n- 具体的でリアルな過去の体験\n\n禁止事項:\n- 複数要素の組み合わせ\n- 第三者視点\n\n例:\n「子供の頃、祖母の着物の人形が怖かった」（人形要素のみ）\n「学生時代、古いレコードをよく聞いていた」（レコード要素のみ）\n\n本文のみ、番号付きで2本。`
+            content: `選択されなかった要素（フェイク生成用）:\n${objectsList}\n\n役割: 上記要素から異なる2つを選んで、それぞれ短いタイトルを2本作成。\n\n条件:\n- 1本につき1つの要素を使用\n- 2つの名詞を「と」で繋げたタイトル形式\n- 10-15文字程度\n- 具体的な体験内容は含めない\n- むしろ意外な組み合わせにする\n\n禁止事項:\n- 複数要素の混在\n- 体験の詳細説明\n- 動詞の使用\n- ありきたりな組み合わせ\n\n例:\n「人形と深夜ラジオ」（人形要素）\n「レコードと雨漏り」（レコード要素）\n\n本文のみ、番号付きで2本。`
           },
           {
             role: 'user',
@@ -81,8 +81,8 @@ export async function POST(req: Request) {
       const labels = availableObjects.map((o: any) => o?.label).filter(Boolean);
       return Response.json({ 
         fakes: [
-          labels[0] ? `子供の頃、${labels[0]}が印象的だった` : '子供の頃の思い出があった',
-          labels[1] ? `学生時代、${labels[1]}をよく見ていた` : '学生時代の記憶がある'
+          labels[0] ? `${labels[0]}と思い出` : '思い出と記憶',
+          labels[1] ? `${labels[1]}と時間` : '時間と場所'
         ] 
       }, { headers: cors() });
     }

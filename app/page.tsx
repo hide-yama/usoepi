@@ -25,6 +25,7 @@ export default function Page() {
   const [answerId, setAnswerId] = useState<'A' | 'B' | 'C' | null>(null);
   const [votes, setVotes] = useState<Record<string, 'A' | 'B' | 'C'>>({});
   const [showHelpModal, setShowHelpModal] = useState(false);
+  const [showPresenterView, setShowPresenterView] = useState(true);
   
   // 写真アップ画面のステップ管理
   const [photoStep, setPhotoStep] = useState<'upload' | 'select' | 'write' | 'normalize' | 'generate' | 'complete'>('upload');
@@ -196,6 +197,7 @@ export default function Page() {
       setAnswerId(mixed.find((c) => c.isTrue)!.id);
       setVotes({});
       setPhotoStep('complete'); // ステップ完了
+      setShowPresenterView(true); // 出題者ビューをリセット
       setStage('quiz');
       window.scrollTo(0, 0);
     } catch (e) {
@@ -237,54 +239,6 @@ export default function Page() {
     );
   }
 
-  // プログレスインジケーターコンポーネント
-  function ProgressIndicator() {
-    const steps = [
-      { key: 'upload', label: '写真選択', completed: !!photoDataUrl },
-      { key: 'select', label: '要素選択', completed: !!selectedObjectId },
-      { key: 'write', label: '実話入力', completed: storyRaw.trim().length > 0 },
-      { key: 'normalize', label: '文章確認', completed: !!storyNorm },
-      { key: 'generate', label: '完成', completed: choices.length > 0 }
-    ];
-
-    return (
-      <div className="mb-6 bg-[var(--card)] rounded-xl p-4 border border-[var(--border)]">
-        <div className="flex items-center justify-between">
-          {steps.map((step, index) => (
-            <div key={step.key} className="flex items-center">
-              <div className={`flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all ${
-                step.completed 
-                  ? 'bg-[var(--green)] border-[var(--green)] text-white' 
-                  : photoStep === step.key 
-                    ? 'border-[var(--blue)] text-[var(--blue)]' 
-                    : 'border-[var(--muted)] text-[var(--muted)]'
-              }`}>
-                {step.completed ? (
-                  <Check className="w-4 h-4 check-animation" />
-                ) : (
-                  <span className="text-xs font-bold">{index + 1}</span>
-                )}
-              </div>
-              <span className={`ml-2 text-sm hidden sm:inline ${
-                step.completed 
-                  ? 'text-[var(--green)]' 
-                  : photoStep === step.key 
-                    ? 'text-[var(--blue)] font-bold' 
-                    : 'text-[var(--muted)]'
-              }`}>
-                {step.label}
-              </span>
-              {index < steps.length - 1 && (
-                <div className={`w-8 h-0.5 mx-2 ${
-                  step.completed ? 'bg-[var(--green)]' : 'bg-[var(--muted)]'
-                }`} />
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
 
   // フローティングヘルプチップコンポーネント
   function FloatingTip() {
@@ -295,11 +249,11 @@ export default function Page() {
         case 'select':
           return '写真から要素を1つ選んでください';
         case 'write':
-          return '選んだ要素について実話を書いてください';
+          return '選んだ要素を使ったタイトルを入力してください';
         case 'normalize':
           return '文章を確認して、必要なら編集してください';
         case 'generate':
-          return 'フェイク2本を生成してゲームを開始しましょう';
+          return 'フェイクタイトル2本を生成してゲームを開始しましょう';
         default:
           return '';
       }
@@ -338,7 +292,7 @@ export default function Page() {
               <ol className="list-decimal list-inside space-y-2 text-[var(--muted)]">
                 <li>2〜8名のプレイヤーを登録</li>
                 <li>各ラウンドで出題者を1名選択</li>
-                <li>出題者は写真をアップロードし、写真内の要素を1つ選んで実話を入力</li>
+                <li>出題者は写真をアップロードし、写真内の要素を1つ選んでタイトルを入力</li>
                 <li>AIが選ばれなかった要素を使って、巧妙なウソエピソードを2つ生成</li>
                 <li>他のプレイヤーは3つのエピソードから本物を当てる</li>
               </ol>
@@ -354,11 +308,11 @@ export default function Page() {
             </section>
             
             <section>
-              <h3 className="font-bold text-[var(--blue)] mb-2">✍️ 実話の書き方</h3>
+              <h3 className="font-bold text-[var(--blue)] mb-2">✍️ タイトルの作り方</h3>
               <ul className="list-disc list-inside space-y-1 text-[var(--muted)]">
-                <li>選んだ要素にまつわる個人的な思い出を書く</li>
-                <li>20〜40字程度の短い文章に整形されます</li>
-                <li>「〜だった」「〜していた」など過去形で書くと自然</li>
+                <li>選んだ要素と関連するものを「〇〇と〇〇」の形式で</li>
+                <li>10〜15文字程度の短いタイトルに整形されます</li>
+                <li>抽象的にすることで、話し手が自由に解釈できます</li>
               </ul>
             </section>
             
@@ -459,9 +413,8 @@ export default function Page() {
           </div>
           
           {/* プログレスインジケーター */}
-          <ProgressIndicator />
           
-          <h3 className="text-lg font-semibold mb-3"><span style={{ color: '#4169E1' }}>3)</span> 写真をアップし、対象と実話を入力</h3>
+          <h3 className="text-lg font-semibold mb-3"><span style={{ color: '#4169E1' }}>3)</span> 写真をアップし、対象とタイトルを入力</h3>
           <div className="space-y-4">
             <div>
               <label className="block text-xs text-[var(--muted)] mb-1">写真ファイル</label>
@@ -479,13 +432,13 @@ export default function Page() {
                       </span>
                     ))}
                   </div>
-                  <p className="text-xs text-[var(--muted)] mt-1 break-words">※ 選択した要素で実話を作成、残りの要素でフェイクを生成します</p>
+                  <p className="text-xs text-[var(--muted)] mt-1 break-words">※ 選択した要素でタイトルを作成、残りの要素でフェイクタイトルを生成します</p>
                 </div>
               )}
             </div>
             {selectedObjectId && (
               <div>
-                <label className="block text-xs text-[var(--muted)] mb-1">実話エピソード（簡潔に）</label>
+                <label className="block text-xs text-[var(--muted)] mb-1">タイトル（「○○と◯◯」の形式）</label>
                 <textarea 
                   value={storyRaw} 
                   onChange={(e)=>{
@@ -495,7 +448,7 @@ export default function Page() {
                     }
                   }} 
                   maxLength={100} 
-                  placeholder="例：大学時代に毎日使っていた赤いマグカップ" 
+                  placeholder="例：卵焼きと換気扇、コーヒーと朝時間" 
                   className="w-full rounded-xl border bg-[#0f1218] border-[var(--border)] p-2 text-sm min-h-[80px]"/>
                 <div className="mt-2 flex items-center gap-2">
                   <button 
@@ -504,17 +457,17 @@ export default function Page() {
                     onClick={handleNormalize}
                   >
                     <Wand2 className="w-4 h-4 mr-1"/>
-                    {storyRaw.trim().length === 0 ? '実話を入力してください' : '整形する ✨'}
+                    {storyRaw.trim().length === 0 ? 'タイトルを入力してください' : '整形する ✨'}
                   </button>
                 </div>
                 {storyNorm && (
                   <div className="mt-3">
-                    <label className="block text-xs text-[var(--muted)] mb-1">整形後（必要なら編集可）</label>
+                    <label className="block text-xs text-[var(--muted)] mb-1">整形後のタイトル（必要なら編集可）</label>
                     <textarea value={storyNorm} onChange={(e)=>setStoryNorm(e.target.value)} className="w-full rounded-xl border bg-[#0f1218] border-[var(--border)] p-2 text-sm min-h-[110px]"/>
                     <div className="flex justify-end mt-2">
                       <button className="btn btn-primary break-words" onClick={handleGenerate}>
                         <Shuffle className="w-4 h-4 mr-1"/>
-                        フェイク2本を生成してゲーム開始 🎮
+                        フェイクタイトル2本を生成してゲーム開始 🎮
                       </button>
                     </div>
                   </div>
@@ -534,38 +487,77 @@ export default function Page() {
         {/* Quiz */}
         <section className={`panel ${stage==='quiz' ? '' : 'hidden'}`}>
           <h3 className="text-lg font-semibold mb-3"><span style={{ color: '#32CD32' }}>4)</span> 三択クイズ</h3>
-          {photoDataUrl && (
-            <div className="mb-3">
-              <img src={photoDataUrl} alt="preview" className="photo-preview"/>
-            </div>
-          )}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {choices.map((c)=> (
-              <div key={c.id} className={`card`}>
-                <h4 className="text-xs text-[var(--muted)] m-0">{c.id}</h4>
-                <p className="m-0 leading-6 text-sm" dangerouslySetInnerHTML={{__html: escapeHtml(c.text)}}/>
+          
+          {showPresenterView ? (
+            <>
+              {/* 出題者への案内メッセージ */}
+              <div className="mb-4 p-4 bg-[var(--accent-2)]/10 border border-[var(--accent-2)]/30 rounded-xl text-center">
+                <p className="text-lg font-bold text-[var(--accent-2)]">
+                  🎤 {presenter}さん、3つのタイトルをお話しください
+                </p>
+                <p className="text-sm text-[var(--muted)] mt-1">
+                  各タイトルについて自由にエピソードを話してください
+                </p>
               </div>
-            ))}
-          </div>
-
-          <div className="border-t border-[var(--border)] my-3"/>
-          <h4 className="text-sm text-[var(--muted)]">投票</h4>
-          <ul className="list-none p-0 m-0">
-            {players.filter(name => name !== presenter).map((name)=> (
-              <li key={name} className="flex items-center justify-between gap-2 py-2 border-b border-dashed border-[var(--border)]">
-                <div>{name}</div>
-                <div className="inline-grid grid-cols-3 gap-1 vote-buttons">
-                  {(['A','B','C'] as const).map((id)=> (
-                    <button key={id} className={`rounded-lg border px-0 py-2 w-10 transition-all ${votes[name]===id ? 'sel':''}`} onClick={()=>setVotes((v)=>({ ...v, [name]: id }))}>{id}</button>
-                  ))}
+              
+              {photoDataUrl && (
+                <div className="mb-3">
+                  <img src={photoDataUrl} alt="preview" className="photo-preview"/>
                 </div>
-              </li>
-            ))}
-          </ul>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {choices.map((c)=> (
+                  <div key={c.id} className={`card`}>
+                    <h4 className="text-xs text-[var(--muted)] m-0">{c.id}</h4>
+                    <p className="m-0 leading-6 text-sm" dangerouslySetInnerHTML={{__html: escapeHtml(c.text)}}/>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="flex justify-center mt-4">
+                <button className="btn btn-primary" onClick={() => setShowPresenterView(false)}>
+                  話し終わった → 投票へ進む
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* 回答者への案内メッセージ */}
+              <div className="mb-4 p-4 bg-[var(--blue)]/10 border border-[var(--blue)]/30 rounded-xl text-center">
+                <p className="text-lg font-bold text-[var(--blue)]">
+                  🗳️ 回答者の皆さん、{presenter}さんの本当のタイトルを当ててください
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                {choices.map((c)=> (
+                  <div key={c.id} className={`card`}>
+                    <h4 className="text-xs text-[var(--muted)] m-0">{c.id}</h4>
+                    <p className="m-0 leading-6 text-sm" dangerouslySetInnerHTML={{__html: escapeHtml(c.text)}}/>
+                  </div>
+                ))}
+              </div>
 
-          <div className="flex justify-end mt-3">
-            <button className="btn" disabled={Object.keys(votes).length===0} onClick={reveal}><Eye className="w-4 h-4 mr-1"/>正解を表示</button>
-          </div>
+              <div className="border-t border-[var(--border)] my-3"/>
+              <h4 className="text-sm text-[var(--muted)]">投票</h4>
+              <ul className="list-none p-0 m-0">
+                {players.filter(name => name !== presenter).map((name)=> (
+                  <li key={name} className="flex items-center justify-between gap-2 py-2 border-b border-dashed border-[var(--border)]">
+                    <div>{name}</div>
+                    <div className="inline-grid grid-cols-3 gap-1 vote-buttons">
+                      {(['A','B','C'] as const).map((id)=> (
+                        <button key={id} className={`rounded-lg border px-0 py-2 w-10 transition-all ${votes[name]===id ? 'sel':''}`} onClick={()=>setVotes((v)=>({ ...v, [name]: id }))}>{id}</button>
+                      ))}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="flex justify-end mt-3">
+                <button className="btn" disabled={Object.keys(votes).length===0} onClick={reveal}><Eye className="w-4 h-4 mr-1"/>正解を表示</button>
+              </div>
+            </>
+          )}
         </section>
 
         {/* Result */}
